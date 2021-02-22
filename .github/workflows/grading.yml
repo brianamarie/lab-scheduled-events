@@ -1,0 +1,33 @@
+name: Grading workflow
+on: 
+  push:
+    paths:
+    - '.github/workflows/stale-*.yml'
+    branches-ignore:
+    - 'main'
+  workflow_dispatch:
+
+jobs:
+  grade-learner:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Grade scheduled events activity
+        id: events
+        uses: githubtraining/yaml-parser-action@main
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          files: "stale-daily.yml,stale-monthly.yml,stale-weekly.yml"
+      - name: Troubleshooting info for grading
+        if: failure()
+        uses: githubtraining/looking-glass-action@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          feedback: ${{ steps.events.outputs.report }}
+  troubleshoot-activity:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: troubleshooting steps
+        run: echo "To get started, change the on field in stale-daily.yml. Make your commits to any branch OTHER THAN main or your default branch."
